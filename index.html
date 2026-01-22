@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Budget Savings Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 60px auto;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #2c6bed;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1f55c6;
+    }
+
+    .results {
+      margin-top: 24px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .result-row strong {
+      font-weight: bold;
+    }
+
+    .divider {
+      border-top: 1px solid #ddd;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Budget Savings Calculator</h1>
+
+    <label for="amount">Enter Total Amount</label>
+    <input
+      type="number"
+      id="amount"
+      placeholder="e.g. 5000"
+      min="0"
+      step="0.01"
+    />
+
+    <button onclick="calculateBudget()">Calculate</button>
+
+    <div class="results" id="results" style="display: none;">
+      <div class="divider"></div>
+
+      <div class="result-row">
+        <span>Tithing (10%)</span>
+        <strong id="tithing"></strong>
+      </div>
+
+      <div class="result-row">
+        <span>Tax Savings (35%)</span>
+        <strong id="taxes"></strong>
+      </div>
+
+      <div class="result-row">
+        <span>Roth IRA (15% of remaining)</span>
+        <strong id="roth"></strong>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="result-row">
+        <span>Remaining After Allocations</span>
+        <strong id="remaining"></strong>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function formatCurrency(value) {
+      return value.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD"
+      });
+    }
+
+    function calculateBudget() {
+      const amountInput = document.getElementById("amount");
+      const total = parseFloat(amountInput.value);
+
+      if (isNaN(total) || total <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+      }
+
+      const tithing = total * 0.10;
+      const taxes = total * 0.35;
+
+      const remainingAfterFirstTwo = total - tithing - taxes;
+      const roth = remainingAfterFirstTwo * 0.15;
+
+      const finalRemaining =
+        remainingAfterFirstTwo - roth;
+
+      document.getElementById("tithing").textContent =
+        formatCurrency(tithing);
+
+      document.getElementById("taxes").textContent =
+        formatCurrency(taxes);
+
+      document.getElementById("roth").textContent =
+        formatCurrency(roth);
+
+      document.getElementById("remaining").textContent =
+        formatCurrency(finalRemaining);
+
+      document.getElementById("results").style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
