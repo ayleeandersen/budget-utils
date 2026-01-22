@@ -279,20 +279,36 @@ function App() {
                       </div>
                     </div>
 
-                    {rule.expanded && <>
-                    <label>Percentage</label>
-                    <input type="number" value={rule.percent} 
-                      onChange={e=>{const u=[...rules]; u[index].percent=Number(e.target.value); setRules(u);}}
-                      readOnly={!rule.editable}/>
-                    <label>Calculate From</label>
-                    <select value={rule.base} onChange={e=>{const u=[...rules]; u[index].base=e.target.value; setRules(u);}} disabled={!rule.editable}>
-                      <option value="total">Total Amount</option>
-                      <option value="remaining">Remaining Balance</option>
-                    </select>
-                    <label>Description / Checklist Item</label>
-                    <input type="text" value={rule.description} placeholder="e.g. Transfer to savings"
-                      onChange={e=>{const u=[...rules]; u[index].description=e.target.value; setRules(u);}} readOnly={!rule.editable}/>
-                    </>}
+                    {rule.expanded && (
+                      <div>
+                        <label>Percentage</label>
+                        <input
+                          type="number"
+                          value={rule.percent}
+                          onChange={e => { const u=[...rules]; u[index].percent=Number(e.target.value); setRules(u); }}
+                          readOnly={!rule.editable}
+                        />
+
+                        <label>Calculate From</label>
+                        <select
+                          value={rule.base}
+                          onChange={e => { const u=[...rules]; u[index].base=e.target.value; setRules(u); }}
+                          disabled={!rule.editable}
+                        >
+                          <option value="total">Total Amount</option>
+                          <option value="remaining">Remaining Balance</option>
+                        </select>
+
+                        <label>Description / Checklist Item</label>
+                        <input
+                          type="text"
+                          value={rule.description}
+                          placeholder="e.g. Transfer to savings"
+                          onChange={e => { const u=[...rules]; u[index].description=e.target.value; setRules(u); }}
+                          readOnly={!rule.editable}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </Draggable>
@@ -307,29 +323,36 @@ function App() {
         <button className="secondary" onClick={resetAll}>Reset All</button>
       </div>
 
-      {results.length>0 && <div>
-        <div className="results">
-          {results.map((result,index)=>(
-            <div className="result-row" key={index}>
-              <span>{result.name}</span>
-              <strong>{formatCurrency(result.allocation)}</strong>
+      {results.length>0 && (
+        <div>
+          <div className="results">
+            {results.map((result,index)=>(
+              <div className="result-row" key={index}>
+                <span>{result.name}</span>
+                <strong>{formatCurrency(result.allocation)}</strong>
+              </div>
+            ))}
+            <div className="result-row">
+              <span>Remaining</span>
+              <strong>{formatCurrency(results[results.length-1].remainingAfter)}</strong>
             </div>
-          ))}
-          <div className="result-row">
-            <span>Remaining</span>
-            <strong>{formatCurrency(results[results.length-1].remainingAfter)}</strong>
+          </div>
+
+          <div className="checklist">
+            <strong>Checklist</strong>
+            {results.map((result,index)=>(
+              <div className="check-item" key={index}>
+                <input
+                  type="checkbox"
+                  checked={!!checklist[index]}
+                  onChange={()=>setChecklist({...checklist,[index]:!checklist[index]})}
+                />
+                <span>{result.description || `Complete ${result.name}`}</span>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="checklist">
-          <strong>Checklist</strong>
-          {results.map((result,index)=>(
-            <div className="check-item" key={index}>
-              <input type="checkbox" checked={!!checklist[index]} onChange={()=>setChecklist({...checklist,[index]:!checklist[index]})}/>
-              <span>{result.description || `Complete ${result.name}`}</span>
-            </div>
-          ))}
-        </div>
-      </div>}
+      )}
     </div>
   );
 }
