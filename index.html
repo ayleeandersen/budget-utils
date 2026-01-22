@@ -5,62 +5,101 @@
   <title>Budget Savings Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <!-- react-beautiful-dnd -->
+  <script src="https://unpkg.com/react-beautiful-dnd@13.1.1/dist/react-beautiful-dnd.js"></script>
+
   <style>
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #f5f7fa;
       margin: 0;
-      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f8f4;
+      color: #1f3d2b;
     }
 
-    .container {
-      max-width: 480px;
+    .app {
+      max-width: 560px;
       margin: 60px auto;
       background: #ffffff;
       padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     }
 
     h1 {
-      font-size: 22px;
-      margin-bottom: 20px;
       text-align: center;
+      margin-bottom: 24px;
+      color: #1b5e3c;
     }
 
     label {
-      display: block;
-      font-weight: bold;
+      font-weight: 600;
       margin-bottom: 6px;
+      display: block;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 10px;
-      font-size: 16px;
-      margin-bottom: 16px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
+      margin-bottom: 14px;
+      border-radius: 6px;
+      border: 1px solid #cce3d6;
+      font-size: 15px;
     }
 
     button {
-      width: 100%;
       padding: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      background-color: #2c6bed;
+      background-color: #2e7d32;
       color: #ffffff;
+      font-weight: 600;
+      font-size: 15px;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
+    button.secondary {
+      background-color: #9dbfb0;
+      color: #1f3d2b;
+    }
+
     button:hover {
-      background-color: #1f55c6;
+      opacity: 0.9;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .rule {
+      background: #f6fbf8;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid #d9eee2;
+    }
+
+    .rule-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #2e7d32;
+      cursor: grab;
     }
 
     .results {
       margin-top: 24px;
+      border-top: 1px solid #d9eee2;
+      padding-top: 16px;
     }
 
     .result-row {
@@ -69,100 +108,248 @@
       margin-bottom: 10px;
     }
 
-    .result-row strong {
-      font-weight: bold;
+    .checklist {
+      margin-top: 24px;
+      background: #f6fbf8;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #d9eee2;
     }
 
-    .divider {
-      border-top: 1px solid #ddd;
-      margin: 16px 0;
+    .check-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .check-item input {
+      width: auto;
+      margin-right: 10px;
+    }
+
+    .dragging {
+      background-color: #d9eee2 !important;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>Budget Savings Calculator</h1>
+<div id="root"></div>
 
-    <label for="amount">Enter Total Amount</label>
-    <input
-      type="number"
-      id="amount"
-      placeholder="e.g. 5000"
-      min="0"
-      step="0.01"
-    />
+<script type="text/babel">
 
-    <button onclick="calculateBudget()">Calculate</button>
+const {
+  DragDropContext,
+  Droppable,
+  Draggable
+} = window.ReactBeautifulDnd;
 
-    <div class="results" id="results" style="display: none;">
-      <div class="divider"></div>
+const DEFAULT_RULES = [
+  {
+    id: '1',
+    name: "Tithing",
+    percent: 10,
+    base: "total",
+    description: "Send tithing payment"
+  },
+  {
+    id: '2',
+    name: "Tax Savings",
+    percent: 35,
+    base: "total",
+    description: "Move funds to tax savings account"
+  },
+  {
+    id: '3',
+    name: "Roth IRA",
+    percent: 15,
+    base: "remaining",
+    description: "Contribute to Roth IRA"
+  }
+];
 
-      <div class="result-row">
-        <span>Tithing (10%)</span>
-        <strong id="tithing"></strong>
+function formatCurrency(value) {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD"
+  });
+}
+
+function App() {
+  const [total, setTotal] = React.useState("");
+  const [rules, setRules] = React.useState(() => {
+    const saved = localStorage.getItem("budgetRules");
+    return saved ? JSON.parse(saved) : DEFAULT_RULES;
+  });
+  const [checklist, setChecklist] = React.useState({});
+
+  React.useEffect(() => {
+    localStorage.setItem("budgetRules", JSON.stringify(rules));
+  }, [rules]);
+
+  const calculate = () => {
+    let remaining = Number(total);
+    return rules.map(rule => {
+      const baseAmount =
+        rule.base === "total" ? Number(total) : remaining;
+
+      const allocation = baseAmount * (rule.percent / 100);
+      remaining -= allocation;
+
+      return {
+        ...rule,
+        allocation,
+        remainingAfter: remaining
+      };
+    });
+  };
+
+  const resetAll = () => {
+    localStorage.removeItem("budgetRules");
+    setRules(DEFAULT_RULES);
+    setTotal("");
+    setChecklist({});
+  };
+
+  const results = total && Number(total) > 0 ? calculate() : [];
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const newRules = Array.from(rules);
+    const [moved] = newRules.splice(result.source.index, 1);
+    newRules.splice(result.destination.index, 0, moved);
+    setRules(newRules);
+  };
+
+  return (
+    <div className="app">
+      <h1>Budget Savings Calculator</h1>
+
+      <div className="section">
+        <label>Total Amount</label>
+        <input
+          type="number"
+          value={total}
+          onChange={e => setTotal(e.target.value)}
+          placeholder="e.g. 5000"
+        />
       </div>
 
-      <div class="result-row">
-        <span>Tax Savings (35%)</span>
-        <strong id="taxes"></strong>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="rulesDroppable">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              {rules.map((rule, index) => (
+                <Draggable key={rule.id} draggableId={rule.id} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      className={`rule ${snapshot.isDragging ? "dragging" : ""}`}
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                    >
+                      <div className="rule-title" {...provided.dragHandleProps}>
+                        {rule.name} (drag to reorder)
+                      </div>
+
+                      <label>Percentage</label>
+                      <input
+                        type="number"
+                        value={rule.percent}
+                        onChange={e => {
+                          const updated = [...rules];
+                          updated[index].percent = Number(e.target.value);
+                          setRules(updated);
+                        }}
+                      />
+
+                      <label>Calculate From</label>
+                      <select
+                        value={rule.base}
+                        onChange={e => {
+                          const updated = [...rules];
+                          updated[index].base = e.target.value;
+                          setRules(updated);
+                        }}
+                      >
+                        <option value="total">Total Amount</option>
+                        <option value="remaining">Remaining Balance</option>
+                      </select>
+
+                      <label>Description / Checklist Item</label>
+                      <input
+                        type="text"
+                        value={rule.description}
+                        placeholder="e.g. Transfer to savings"
+                        onChange={e => {
+                          const updated = [...rules];
+                          updated[index].description = e.target.value;
+                          setRules(updated);
+                        }}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      <div className="button-row">
+        <button onClick={() => {}}>Calculate</button>
+        <button className="secondary" onClick={resetAll}>
+          Reset All
+        </button>
       </div>
 
-      <div class="result-row">
-        <span>Roth IRA (15% of remaining)</span>
-        <strong id="roth"></strong>
-      </div>
+      {results.length > 0 && (
+        <>
+          <div className="results">
+            {results.map((result, index) => (
+              <div className="result-row" key={index}>
+                <span>{result.name}</span>
+                <strong>{formatCurrency(result.allocation)}</strong>
+              </div>
+            ))}
+            <div className="result-row">
+              <span>Remaining</span>
+              <strong>
+                {formatCurrency(
+                  results[results.length - 1].remainingAfter
+                )}
+              </strong>
+            </div>
+          </div>
 
-      <div class="divider"></div>
-
-      <div class="result-row">
-        <span>Remaining After Allocations</span>
-        <strong id="remaining"></strong>
-      </div>
+          <div className="checklist">
+            <strong>Checklist</strong>
+            {results.map((result, index) => (
+              <div className="check-item" key={index}>
+                <input
+                  type="checkbox"
+                  checked={!!checklist[index]}
+                  onChange={() =>
+                    setChecklist({
+                      ...checklist,
+                      [index]: !checklist[index]
+                    })
+                  }
+                />
+                <span>
+                  {result.description || `Complete ${result.name}`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
-  </div>
+  );
+}
 
-  <script>
-    function formatCurrency(value) {
-      return value.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD"
-      });
-    }
-
-    function calculateBudget() {
-      const amountInput = document.getElementById("amount");
-      const total = parseFloat(amountInput.value);
-
-      if (isNaN(total) || total <= 0) {
-        alert("Please enter a valid amount.");
-        return;
-      }
-
-      const tithing = total * 0.10;
-      const taxes = total * 0.35;
-
-      const remainingAfterFirstTwo = total - tithing - taxes;
-      const roth = remainingAfterFirstTwo * 0.15;
-
-      const finalRemaining =
-        remainingAfterFirstTwo - roth;
-
-      document.getElementById("tithing").textContent =
-        formatCurrency(tithing);
-
-      document.getElementById("taxes").textContent =
-        formatCurrency(taxes);
-
-      document.getElementById("roth").textContent =
-        formatCurrency(roth);
-
-      document.getElementById("remaining").textContent =
-        formatCurrency(finalRemaining);
-
-      document.getElementById("results").style.display = "block";
-    }
-  </script>
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
 
 </body>
 </html>
