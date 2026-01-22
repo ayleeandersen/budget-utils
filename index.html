@@ -304,7 +304,7 @@ function App() {
       </div>
 
       {results.length > 0 && (
-        <>
+        <div>
           <div className="results">
             {results.map((result, index) => (
               <div className="result-row" key={index}>
@@ -315,9 +315,7 @@ function App() {
             <div className="result-row">
               <span>Remaining</span>
               <strong>
-                {formatCurrency(
-                  results[results.length - 1].remainingAfter
-                )}
+                {formatCurrency(results[results.length - 1].remainingAfter)}
               </strong>
             </div>
           </div>
@@ -336,13 +334,11 @@ function App() {
                     })
                   }
                 />
-                <span>
-                  {result.description || `Complete ${result.name}`}
-                </span>
+                <span>{result.description || `Complete ${result.name}`}</span>
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
