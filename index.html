@@ -1,351 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Budget Savings Calculator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Config Items Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script type="module">
+      import * as icons from 'https://cdn.jsdelivr.net/npm/lucide@0.230.0/dist/esm/lucide.js';
+      window.LucideIcons = icons;
+    </script>
+  </head>
+  <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div id="root" class="w-full max-w-md"></div>
 
-  <!-- React -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- React and ReactDOM via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-  <!-- react-beautiful-dnd -->
-  <script src="https://unpkg.com/react-beautiful-dnd@13.1.1/dist/react-beautiful-dnd.js"></script>
+    <script type="text/javascript">
+      const { useState } = React;
+      const { Pencil, Check, Trash, Plus } = window.LucideIcons;
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #f1f8f4;
-      color: #1f3d2b;
-    }
+      function ConfigItemsManager() {
+        const [items, setItems] = useState([
+          { id: 1, value: "Config Item 1", editing: false },
+          { id: 2, value: "Config Item 2", editing: false },
+        ]);
 
-    .app {
-      max-width: 560px;
-      margin: 60px auto;
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    }
+        const handleEdit = (id) => {
+          setItems(items.map(item => item.id === id ? { ...item, editing: true } : item));
+        };
 
-    h1 {
-      text-align: center;
-      margin-bottom: 24px;
-      color: #1b5e3c;
-    }
+        const handleSave = (id) => {
+          setItems(items.map(item => item.id === id ? { ...item, editing: false } : item));
+        };
 
-    label {
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: block;
-    }
+        const handleChange = (id, value) => {
+          setItems(items.map(item => item.id === id ? { ...item, value } : item));
+        };
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 14px;
-      border-radius: 6px;
-      border: 1px solid #cce3d6;
-      font-size: 15px;
-    }
+        const handleAdd = () => {
+          const newId = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1;
+          setItems([...items, { id: newId, value: "", editing: true }]);
+        };
 
-    button {
-      padding: 12px;
-      background-color: #2e7d32;
-      color: #ffffff;
-      font-weight: 600;
-      font-size: 15px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+        const handleRemove = (id) => {
+          setItems(items.filter(item => item.id !== id));
+        };
 
-    button.secondary {
-      background-color: #9dbfb0;
-      color: #1f3d2b;
-    }
+        return (
+          React.createElement('div', { className: "p-4 bg-white shadow rounded" },
+            React.createElement('h2', { className: "text-lg font-semibold mb-4" }, "Configuration Items"),
+            React.createElement('ul', { className: "space-y-2" },
+              items.map(item =>
+                React.createElement('li', { key: item.id, className: "flex items-center space-x-2" },
+                  React.createElement('input', {
+                    type: 'text',
+                    className: `flex-1 border rounded p-2 ${item.editing ? "border-blue-500" : "border-gray-300 bg-gray-100"}`,
+                    value: item.value,
+                    onChange: (e) => handleChange(item.id, e.target.value),
+                    disabled: !item.editing
+                  }),
+                  !item.editing
+                    ? React.createElement('button', { onClick: () => handleEdit(item.id), className: "text-blue-500" }, React.createElement(Pencil, { size: 18 }))
+                    : React.createElement('button', { onClick: () => handleSave(item.id), className: "text-green-500" }, React.createElement(Check, { size: 18 })),
+                  React.createElement('button', { onClick: () => handleRemove(item.id), className: "text-red-500" }, React.createElement(Trash, { size: 18 }))
+                )
+              )
+            ),
+            React.createElement('button', {
+              onClick: handleAdd,
+              className: "mt-4 px-4 py-2 bg-blue-500 text-white rounded flex items-center space-x-1"
+            },
+              React.createElement(Plus, { size: 16 }),
+              React.createElement('span', null, "Add Item")
+            )
+          )
+        );
+      }
 
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .button-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .section {
-      margin-bottom: 28px;
-    }
-
-    .rule {
-      background: #f6fbf8;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      border: 1px solid #d9eee2;
-    }
-
-    .rule-title {
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: #2e7d32;
-      cursor: grab;
-    }
-
-    .results {
-      margin-top: 24px;
-      border-top: 1px solid #d9eee2;
-      padding-top: 16px;
-    }
-
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .checklist {
-      margin-top: 24px;
-      background: #f6fbf8;
-      padding: 16px;
-      border-radius: 8px;
-      border: 1px solid #d9eee2;
-    }
-
-    .check-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .check-item input {
-      width: auto;
-      margin-right: 10px;
-    }
-
-    .dragging {
-      background-color: #d9eee2 !important;
-    }
-  </style>
-</head>
-<body>
-
-<div id="root"></div>
-
-<script type="text/babel">
-
-const {
-  DragDropContext,
-  Droppable,
-  Draggable
-} = window.ReactBeautifulDnd;
-
-const DEFAULT_RULES = [
-  {
-    id: '1',
-    name: "Tithing",
-    percent: 10,
-    base: "total",
-    description: "Send tithing payment"
-  },
-  {
-    id: '2',
-    name: "Tax Savings",
-    percent: 35,
-    base: "total",
-    description: "Move funds to tax savings account"
-  },
-  {
-    id: '3',
-    name: "Roth IRA",
-    percent: 15,
-    base: "remaining",
-    description: "Contribute to Roth IRA"
-  }
-];
-
-function formatCurrency(value) {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD"
-  });
-}
-
-function App() {
-  const [total, setTotal] = React.useState("");
-  const [rules, setRules] = React.useState(() => {
-    const saved = localStorage.getItem("budgetRules");
-    return saved ? JSON.parse(saved) : DEFAULT_RULES;
-  });
-  const [checklist, setChecklist] = React.useState({});
-
-  React.useEffect(() => {
-    localStorage.setItem("budgetRules", JSON.stringify(rules));
-  }, [rules]);
-
-  const calculate = () => {
-    let remaining = Number(total);
-    return rules.map(rule => {
-      const baseAmount =
-        rule.base === "total" ? Number(total) : remaining;
-
-      const allocation = baseAmount * (rule.percent / 100);
-      remaining -= allocation;
-
-      return {
-        ...rule,
-        allocation,
-        remainingAfter: remaining
-      };
-    });
-  };
-
-  const resetAll = () => {
-    localStorage.removeItem("budgetRules");
-    setRules(DEFAULT_RULES);
-    setTotal("");
-    setChecklist({});
-  };
-
-  const results = total && Number(total) > 0 ? calculate() : [];
-
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    const newRules = Array.from(rules);
-    const [moved] = newRules.splice(result.source.index, 1);
-    newRules.splice(result.destination.index, 0, moved);
-    setRules(newRules);
-  };
-
-  return (
-    <div className="app">
-      <h1>Budget Savings Calculator</h1>
-
-      <div className="section">
-        <label>Total Amount</label>
-        <input
-          type="number"
-          value={total}
-          onChange={e => setTotal(e.target.value)}
-          placeholder="e.g. 5000"
-        />
-      </div>
-
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="rulesDroppable">
-          {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              {rules.map((rule, index) => (
-                <Draggable key={rule.id} draggableId={rule.id} index={index}>
-                  {(provided, snapshot) => (
-                    <div
-                      className={`rule ${snapshot.isDragging ? "dragging" : ""}`}
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                    >
-                      <div className="rule-title" {...provided.dragHandleProps}>
-                        {rule.name} (drag to reorder)
-                      </div>
-
-                      <label>Percentage</label>
-                      <input
-                        type="number"
-                        value={rule.percent}
-                        onChange={e => {
-                          const updated = [...rules];
-                          updated[index].percent = Number(e.target.value);
-                          setRules(updated);
-                        }}
-                      />
-
-                      <label>Calculate From</label>
-                      <select
-                        value={rule.base}
-                        onChange={e => {
-                          const updated = [...rules];
-                          updated[index].base = e.target.value;
-                          setRules(updated);
-                        }}
-                      >
-                        <option value="total">Total Amount</option>
-                        <option value="remaining">Remaining Balance</option>
-                      </select>
-
-                      <label>Description / Checklist Item</label>
-                      <input
-                        type="text"
-                        value={rule.description}
-                        placeholder="e.g. Transfer to savings"
-                        onChange={e => {
-                          const updated = [...rules];
-                          updated[index].description = e.target.value;
-                          setRules(updated);
-                        }}
-                      />
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-
-      <div className="button-row">
-        <button onClick={() => {}}>Calculate</button>
-        <button className="secondary" onClick={resetAll}>
-          Reset All
-        </button>
-      </div>
-
-      {results.length > 0 && (
-        <div>
-          <div className="results">
-            {results.map((result, index) => (
-              <div className="result-row" key={index}>
-                <span>{result.name}</span>
-                <strong>{formatCurrency(result.allocation)}</strong>
-              </div>
-            ))}
-            <div className="result-row">
-              <span>Remaining</span>
-              <strong>
-                {formatCurrency(results[results.length - 1].remainingAfter)}
-              </strong>
-            </div>
-          </div>
-
-          <div className="checklist">
-            <strong>Checklist</strong>
-            {results.map((result, index) => (
-              <div className="check-item" key={index}>
-                <input
-                  type="checkbox"
-                  checked={!!checklist[index]}
-                  onChange={() =>
-                    setChecklist({
-                      ...checklist,
-                      [index]: !checklist[index]
-                    })
-                  }
-                />
-                <span>{result.description || `Complete ${result.name}`}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-</script>
-
-</body>
+      ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(ConfigItemsManager));
+    </script>
+  </body>
 </html>
