@@ -49,6 +49,7 @@ input, select {
   border-radius: 6px;
   border: 1px solid #cce3d6;
   font-size: 15px;
+  box-sizing: border-box; /* ensures input doesn't overflow */
 }
 
 input[readonly] {
@@ -99,12 +100,12 @@ button:hover {
   margin-bottom: 12px;
   color: #2e7d32;
   cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .rule-icons {
-  position: absolute;
-  top: 16px;
-  right: 16px;
   display: flex;
   gap: 8px;
 }
@@ -255,12 +256,18 @@ function App() {
               <Draggable key={rule.id} draggableId={rule.id} index={index}>
                 {(provided,snapshot)=>(
                   <div className={`rule ${snapshot.isDragging?"dragging":""}`} ref={provided.innerRef} {...provided.draggableProps}>
-                    <div className="rule-title" {...provided.dragHandleProps}>{rule.name} (drag to reorder)</div>
-                    <div className="rule-icons">
-                      {!rule.editable && <span title="Edit" onClick={()=>toggleEdit(index)}>✏️</span>}
-                      {rule.editable && <span title="Save" onClick={()=>saveEdit(index)}>✔️</span>}
-                      <span title="Remove" onClick={()=>removeRule(index)}>🗑️</span>
+                    <div className="rule-title" {...provided.dragHandleProps}>
+                      <input type="text" value={rule.name} 
+                        onChange={e=>{const u=[...rules]; u[index].name=e.target.value; setRules(u);}}
+                        readOnly={!rule.editable} 
+                        style={{fontWeight:600, fontSize:'16px', border:'none', background:'transparent', width:'80%'}}/>
+                      <div className="rule-icons">
+                        {!rule.editable && <span title="Edit" onClick={()=>toggleEdit(index)}>✏️</span>}
+                        {rule.editable && <span title="Save" onClick={()=>saveEdit(index)}>✔️</span>}
+                        <span title="Remove" onClick={()=>removeRule(index)}>🗑️</span>
+                      </div>
                     </div>
+
                     <label>Percentage</label>
                     <input type="number" value={rule.percent} 
                       onChange={e=>{const u=[...rules]; u[index].percent=Number(e.target.value); setRules(u);}}
@@ -315,7 +322,6 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
 </script>
 
 </body>
