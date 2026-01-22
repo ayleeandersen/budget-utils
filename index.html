@@ -6,11 +6,8 @@
     <title>Config Items Manager</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script type="module">
-      import * as icons from 'https://cdn.jsdelivr.net/npm/lucide@0.230.0/dist/esm/lucide.js';
-      window.LucideIcons = icons;
-    </script>
+    <!-- Lucide Icons UMD -->
+    <script src="https://unpkg.com/lucide/dist/lucide.min.js"></script>
   </head>
   <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
     <div id="root" class="w-full max-w-md"></div>
@@ -21,7 +18,7 @@
 
     <script type="text/javascript">
       const { useState } = React;
-      const { Pencil, Check, Trash, Plus } = window.LucideIcons;
+      const { Pencil, Check, Trash2, Plus } = lucide; // Use `lucide` global object
 
       function ConfigItemsManager() {
         const [items, setItems] = useState([
@@ -66,7 +63,7 @@
                   !item.editing
                     ? React.createElement('button', { onClick: () => handleEdit(item.id), className: "text-blue-500" }, React.createElement(Pencil, { size: 18 }))
                     : React.createElement('button', { onClick: () => handleSave(item.id), className: "text-green-500" }, React.createElement(Check, { size: 18 })),
-                  React.createElement('button', { onClick: () => handleRemove(item.id), className: "text-red-500" }, React.createElement(Trash, { size: 18 }))
+                  React.createElement('button', { onClick: () => handleRemove(item.id), className: "text-red-500" }, React.createElement(Trash2, { size: 18 }))
                 )
               )
             ),
