@@ -5,12 +5,9 @@
 <title>Budget Savings Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- React -->
 <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-<!-- react-beautiful-dnd -->
 <script src="https://unpkg.com/react-beautiful-dnd@13.1.1/dist/react-beautiful-dnd.js"></script>
 
 <style>
@@ -150,6 +147,18 @@ button:hover {
 .dragging {
   background-color: #d9eee2 !important;
 }
+
+.collapsible-header {
+  background: #d9eee2;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
 </style>
 </head>
 <body>
@@ -177,6 +186,7 @@ function App() {
     return saved ? JSON.parse(saved) : DEFAULT_RULES;
   });
   const [checklist, setChecklist] = React.useState({});
+  const [configExpanded, setConfigExpanded] = React.useState(false); // collapsed by default
 
   React.useEffect(() => {
     localStorage.setItem("budgetRules", JSON.stringify(rules));
@@ -238,7 +248,7 @@ function App() {
     setRules([...rules,newRule]);
   };
 
-  const toggleExpand = (index) => {
+  const toggleExpandRule = (index) => {
     const updated = [...rules];
     updated[index].expanded = !updated[index].expanded;
     setRules(updated);
@@ -255,68 +265,78 @@ function App() {
         <input type="number" value={total} onChange={e=>setTotal(e.target.value)} placeholder="e.g. 5000"/>
       </div>
 
-      <button onClick={addRule} style={{marginBottom:"12px"}}>+ Add Rule</button>
+      {/* Collapsible container for all rules */}
+      <div className="collapsible-header" onClick={()=>setConfigExpanded(!configExpanded)}>
+        <span>Budget Rules</span>
+        <span>{configExpanded ? "▼" : "▶"}</span>
+      </div>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="rulesDroppable">
-          {(provided)=>(<div ref={provided.innerRef} {...provided.droppableProps}>
-            {rules.map((rule,index)=>(
-              <Draggable key={rule.id} draggableId={rule.id} index={index}>
-                {(provided,snapshot)=>(
-                  <div className={`rule ${snapshot.isDragging?"dragging":""}`} ref={provided.innerRef} {...provided.draggableProps}>
-                    <div className="rule-title" {...provided.dragHandleProps}>
-                      <span style={{cursor:"pointer"}} onClick={()=>toggleExpand(index)}>
-                        {rule.expanded ? "▼" : "▶"}
-                      </span>
-                      <input type="text" value={rule.name} 
-                        onChange={e=>{const u=[...rules]; u[index].name=e.target.value; setRules(u);}}
-                        readOnly={!rule.editable} 
-                        style={{fontWeight:600, fontSize:'14px', border:'none', background:'transparent', width:'75%'}}/>
-                      <div className="rule-icons">
-                        {!rule.editable && <span title="Edit" onClick={()=>toggleEdit(index)}>✏️</span>}
-                        {rule.editable && <span title="Save" onClick={()=>saveEdit(index)}>✔️</span>}
-                        <span title="Remove" onClick={()=>removeRule(index)}>🗑️</span>
-                      </div>
-                    </div>
+      {configExpanded && (
+        <div>
+          <button onClick={addRule} style={{marginBottom:"12px"}}>+ Add Rule</button>
 
-                    {rule.expanded && (
-                      <div>
-                        <label>Percentage</label>
-                        <input
-                          type="number"
-                          value={rule.percent}
-                          onChange={e => { const u=[...rules]; u[index].percent=Number(e.target.value); setRules(u); }}
-                          readOnly={!rule.editable}
-                        />
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="rulesDroppable">
+              {(provided)=>(<div ref={provided.innerRef} {...provided.droppableProps}>
+                {rules.map((rule,index)=>(
+                  <Draggable key={rule.id} draggableId={rule.id} index={index}>
+                    {(provided,snapshot)=>(
+                      <div className={`rule ${snapshot.isDragging?"dragging":""}`} ref={provided.innerRef} {...provided.draggableProps}>
+                        <div className="rule-title" {...provided.dragHandleProps}>
+                          <span style={{cursor:"pointer"}} onClick={()=>toggleExpandRule(index)}>
+                            {rule.expanded ? "▼" : "▶"}
+                          </span>
+                          <input type="text" value={rule.name} 
+                            onChange={e=>{const u=[...rules]; u[index].name=e.target.value; setRules(u);}}
+                            readOnly={!rule.editable} 
+                            style={{fontWeight:600, fontSize:'14px', border:'none', background:'transparent', width:'75%'}}/>
+                          <div className="rule-icons">
+                            {!rule.editable && <span title="Edit" onClick={()=>toggleEdit(index)}>✏️</span>}
+                            {rule.editable && <span title="Save" onClick={()=>saveEdit(index)}>✔️</span>}
+                            <span title="Remove" onClick={()=>removeRule(index)}>🗑️</span>
+                          </div>
+                        </div>
 
-                        <label>Calculate From</label>
-                        <select
-                          value={rule.base}
-                          onChange={e => { const u=[...rules]; u[index].base=e.target.value; setRules(u); }}
-                          disabled={!rule.editable}
-                        >
-                          <option value="total">Total Amount</option>
-                          <option value="remaining">Remaining Balance</option>
-                        </select>
+                        {rule.expanded && (
+                          <div>
+                            <label>Percentage</label>
+                            <input
+                              type="number"
+                              value={rule.percent}
+                              onChange={e => { const u=[...rules]; u[index].percent=Number(e.target.value); setRules(u); }}
+                              readOnly={!rule.editable}
+                            />
 
-                        <label>Description / Checklist Item</label>
-                        <input
-                          type="text"
-                          value={rule.description}
-                          placeholder="e.g. Transfer to savings"
-                          onChange={e => { const u=[...rules]; u[index].description=e.target.value; setRules(u); }}
-                          readOnly={!rule.editable}
-                        />
+                            <label>Calculate From</label>
+                            <select
+                              value={rule.base}
+                              onChange={e => { const u=[...rules]; u[index].base=e.target.value; setRules(u); }}
+                              disabled={!rule.editable}
+                            >
+                              <option value="total">Total Amount</option>
+                              <option value="remaining">Remaining Balance</option>
+                            </select>
+
+                            <label>Description / Checklist Item</label>
+                            <input
+                              type="text"
+                              value={rule.description}
+                              placeholder="e.g. Transfer to savings"
+                              onChange={e => { const u=[...rules]; u[index].description=e.target.value; setRules(u); }}
+                              readOnly={!rule.editable}
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
-          </div>)}
-        </Droppable>
-      </DragDropContext>
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>)}
+            </Droppable>
+          </DragDropContext>
+        </div>
+      )}
 
       <div className="button-row">
         <button onClick={()=>{}}>Calculate</button>
