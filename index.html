@@ -23,33 +23,34 @@ body {
 
 .app {
   max-width: 600px;
-  margin: 60px auto;
+  margin: 40px auto;
   background: #ffffff;
-  padding: 24px;
+  padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   color: #1b5e3c;
 }
 
 label {
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   display: block;
+  font-size: 13px;
 }
 
 input, select {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 14px;
+  padding: 6px;
+  margin-bottom: 8px;
   border-radius: 6px;
   border: 1px solid #cce3d6;
-  font-size: 15px;
-  box-sizing: border-box; /* ensures input doesn't overflow */
+  font-size: 14px;
+  box-sizing: border-box;
 }
 
 input[readonly] {
@@ -57,13 +58,13 @@ input[readonly] {
 }
 
 button {
-  padding: 12px;
+  padding: 10px;
   background-color: #2e7d32;
   color: #fff;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -78,26 +79,26 @@ button:hover {
 
 .button-row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .section {
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
 .rule {
   background: #f6fbf8;
-  padding: 16px;
+  padding: 12px;
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border: 1px solid #d9eee2;
   position: relative;
 }
 
 .rule-title {
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: #2e7d32;
   cursor: grab;
   display: flex;
@@ -107,30 +108,30 @@ button:hover {
 
 .rule-icons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .rule-icons span {
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .results {
-  margin-top: 24px;
+  margin-top: 16px;
   border-top: 1px solid #d9eee2;
-  padding-top: 16px;
+  padding-top: 12px;
 }
 
 .result-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .checklist {
-  margin-top: 24px;
+  margin-top: 16px;
   background: #f6fbf8;
-  padding: 16px;
+  padding: 12px;
   border-radius: 8px;
   border: 1px solid #d9eee2;
 }
@@ -138,12 +139,12 @@ button:hover {
 .check-item {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .check-item input {
   width: auto;
-  margin-right: 10px;
+  margin-right: 6px;
 }
 
 .dragging {
@@ -160,9 +161,9 @@ button:hover {
 const { DragDropContext, Droppable, Draggable } = window.ReactBeautifulDnd;
 
 const DEFAULT_RULES = [
-  { id: '1', name: "Tithing", percent: 10, base: "total", description: "Send tithing payment", editable: false },
-  { id: '2', name: "Tax Savings", percent: 35, base: "total", description: "Move funds to tax savings account", editable: false },
-  { id: '3', name: "Roth IRA", percent: 15, base: "remaining", description: "Contribute to Roth IRA", editable: false }
+  { id: '1', name: "Tithing", percent: 10, base: "total", description: "Send tithing payment", editable: false, expanded: false },
+  { id: '2', name: "Tax Savings", percent: 35, base: "total", description: "Move funds to tax savings account", editable: false, expanded: false },
+  { id: '3', name: "Roth IRA", percent: 15, base: "remaining", description: "Contribute to Roth IRA", editable: false, expanded: false }
 ];
 
 function formatCurrency(value) {
@@ -231,9 +232,16 @@ function App() {
       percent: 0,
       base: "total",
       description: "",
-      editable: true
+      editable: true,
+      expanded: true
     };
     setRules([...rules,newRule]);
+  };
+
+  const toggleExpand = (index) => {
+    const updated = [...rules];
+    updated[index].expanded = !updated[index].expanded;
+    setRules(updated);
   };
 
   const results = total && Number(total) > 0 ? calculate() : [];
@@ -247,7 +255,7 @@ function App() {
         <input type="number" value={total} onChange={e=>setTotal(e.target.value)} placeholder="e.g. 5000"/>
       </div>
 
-      <button onClick={addRule} style={{marginBottom:"16px"}}>+ Add Rule</button>
+      <button onClick={addRule} style={{marginBottom:"12px"}}>+ Add Rule</button>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="rulesDroppable">
@@ -257,10 +265,13 @@ function App() {
                 {(provided,snapshot)=>(
                   <div className={`rule ${snapshot.isDragging?"dragging":""}`} ref={provided.innerRef} {...provided.draggableProps}>
                     <div className="rule-title" {...provided.dragHandleProps}>
+                      <span style={{cursor:"pointer"}} onClick={()=>toggleExpand(index)}>
+                        {rule.expanded ? "▼" : "▶"}
+                      </span>
                       <input type="text" value={rule.name} 
                         onChange={e=>{const u=[...rules]; u[index].name=e.target.value; setRules(u);}}
                         readOnly={!rule.editable} 
-                        style={{fontWeight:600, fontSize:'16px', border:'none', background:'transparent', width:'80%'}}/>
+                        style={{fontWeight:600, fontSize:'14px', border:'none', background:'transparent', width:'75%'}}/>
                       <div className="rule-icons">
                         {!rule.editable && <span title="Edit" onClick={()=>toggleEdit(index)}>✏️</span>}
                         {rule.editable && <span title="Save" onClick={()=>saveEdit(index)}>✔️</span>}
@@ -268,6 +279,7 @@ function App() {
                       </div>
                     </div>
 
+                    {rule.expanded && <>
                     <label>Percentage</label>
                     <input type="number" value={rule.percent} 
                       onChange={e=>{const u=[...rules]; u[index].percent=Number(e.target.value); setRules(u);}}
@@ -280,6 +292,7 @@ function App() {
                     <label>Description / Checklist Item</label>
                     <input type="text" value={rule.description} placeholder="e.g. Transfer to savings"
                       onChange={e=>{const u=[...rules]; u[index].description=e.target.value; setRules(u);}} readOnly={!rule.editable}/>
+                    </>}
                   </div>
                 )}
               </Draggable>
